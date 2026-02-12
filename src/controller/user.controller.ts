@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { loginSchema, signUpSchema } from "../validator/auth.user.js";
+import { loginSchema, signUpSchema, updatBodySchema } from "../validator/auth.user.js";
 import User from "../model/user.js";
 import jwt from "jsonwebtoken";
 
@@ -43,16 +43,16 @@ export const signUpController = async (req: Request, res: Response) => {
         }
     })
 
-} 
+}
 
 export const loginInController = async (req: Request, res: Response) => {
 
     const email = req.body.email;
     const password = req.body.password;
 
-    const parsed = loginSchema.safeParse(req.body);
+    const parsedData = loginSchema.safeParse(req.body);
 
-    if (!parsed.success) {
+    if (!parsedData.success) {
         return res.status(400).json({
             success: false,
             error: "Invalid request schema"
@@ -73,17 +73,17 @@ export const loginInController = async (req: Request, res: Response) => {
                     FirstName: existingUser.FirstName
                 }, JWT_PASSWORD)
                 return res.status(200).json({
-                    success: true, 
-                    data:{
+                    success: true,
+                    data: {
                         token
                     }
                 });
             };
         }
-        else{
+        else {
             return res.status(400).json({
-                success: false, 
-                message:"Invalis email or password"
+                success: false,
+                message: "Invalis email or password"
 
             });
         };
@@ -93,7 +93,36 @@ export const loginInController = async (req: Request, res: Response) => {
             error: "error while fetching details "
         })
     }
-
-
-
 }
+
+export const updateController = async (req: Request, res: Response) => {
+    const parsedData = updatBodySchema.safeParse(req.body);
+
+    if (!parsedData.success) {
+        return res.status(411).json({
+            message: "error while updating information"
+        })
+    }
+    const { FirstName, LastName, password } = parsedData.data;
+
+    const updatedData: any = {};
+
+    updatedData.FirstName = FirstName;
+    updatedData.LastName = LastName;
+
+    if (password) {
+        updatedData.password = await bcrypt.hash(password, 10);
+    }
+
+    const userId = (req as any).user.userId;
+
+    const result = await User.updateOne(
+        { _id: userId },
+        { $set: updatedData }
+    );
+
+    return res.status(200).json({
+        message: "User updated successfully "
+    });
+
+};
