@@ -116,7 +116,7 @@ export const updateController = async (req: Request, res: Response) => {
 
     const userId = (req as any).user.userId;
 
-    const result = await User.updateOne(
+         await User.updateOne(
         { _id: userId },
         { $set: updatedData }
     );
@@ -126,3 +126,31 @@ export const updateController = async (req: Request, res: Response) => {
     });
 
 };
+
+
+export const filterController = async (req: Request, res:Response)=>{
+
+    const FilterName = req.body.FirstName;
+
+    if(!FilterName){
+        return res.status(400).json({
+            message: "Name is required"
+        });
+    }
+    console.log("check check")
+
+
+    const existingUser = await User.find({
+        FirstName: { $regex:FilterName}
+    })
+    console.log("before" + existingUser);
+    if(existingUser.length === 0){
+        return res.status(404).json({
+            message: "User not found in the db"
+        })
+    } else{
+        return res.status(200).json({
+            data:{existingUser}
+        })
+    }
+}
