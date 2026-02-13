@@ -137,20 +137,16 @@ export const filterController = async (req: Request, res:Response)=>{
             message: "Name is required"
         });
     }
-    console.log("check check")
 
 
-    const existingUser = await User.find({
-        FirstName: { $regex:FilterName}
-    })
-    console.log("before" + existingUser);
-    if(existingUser.length === 0){
+    const existingUsers = await User.find({
+        FirstName: { $regex:FilterName, $options:"i"}
+    }).select("FirstName")
+    if(existingUsers.length === 0){
         return res.status(404).json({
             message: "User not found in the db"
-        })
-    } else{
-        return res.status(200).json({
-            data:{existingUser}
-        })
-    }
-}
+        })  
+    } return res.status(200).json({
+        users: existingUsers
+    });
+};
