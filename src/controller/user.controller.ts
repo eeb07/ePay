@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { loginSchema, signUpSchema, updatBodySchema } from "../validator/auth.user.js";
 import User from "../model/user.js";
 import jwt from "jsonwebtoken";
+import Account from "../model/account.js";
 
 const JWT_PASSWORD = process.env.JWT_PASSWORD as string;
 
@@ -32,6 +33,14 @@ export const signUpController = async (req: Request, res: Response) => {
         email,
         password: hashedPassword
     });
+
+    const userId = createdUser._id;
+    console.log(userId);
+
+    await Account.create({
+        userId,
+        balance: 1+ Math.random()* 1000
+    })
     return res.status(201).json({
         success: true,
         data: {
@@ -141,7 +150,7 @@ export const filterController = async (req: Request, res:Response)=>{
 
     const existingUsers = await User.find({
         FirstName: { $regex:FilterName, $options:"i"}
-    }).select("FirstName")
+    })
     if(existingUsers.length === 0){
         return res.status(404).json({
             message: "User not found in the db"
@@ -150,3 +159,12 @@ export const filterController = async (req: Request, res:Response)=>{
         users: existingUsers
     });
 };
+
+
+
+
+
+
+
+
+
